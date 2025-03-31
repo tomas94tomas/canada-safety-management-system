@@ -89,9 +89,9 @@ job "jobName" {
         tags = [
           "traefik.tags=trk-ext",
           "traefik.http.routers.serviceName.entrypoints=https",
-          #"traefik.http.routers.serviceName.rule=Host(`${webConsole}`) && (PathPrefix(`/poa/`))",
+          #"traefik.http.routers.serviceName.rule=Host(`${webConsole}`) && (PathPrefix(`/canada/`))",
           #"traefik.http.routers.serviceName.rule=Host(`${webConsole}`)",
-          "traefik.http.routers.serviceName.rule=Host(`safety-poa.fltechnics.com`)",
+          "traefik.http.routers.serviceName.rule=Host(`safety-canada.fltechnics.com`)",
           "traefik.http.routers.serviceName.tls=true",
           "traefik.http.services.serviceName.loadbalancer.server.scheme=https"
 
