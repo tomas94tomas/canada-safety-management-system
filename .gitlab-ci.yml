@@ -1,0 +1,52 @@
+variables:
+  JOB_NAME: 'safety-poa'
+  NOMAD_NAME_SPACE: 'RND-apps'
+  DOCKER_IMAGE_NAME: 'safety-poa'
+  WEB_ADRESS_LIVE: 'safety.fltechnics.com'
+
+stages:
+  - build
+  - push
+  - deploy
+
+build_container:
+  services:
+    - docker:dind
+  stage: build
+  only:
+    - /^dev\//
+    - /^uat\//
+    - /^version\//
+  script:
+    - export TAG=$(echo ${CI_COMMIT_REF_NAME}_${CI_COMMIT_SHORT_SHA} | tr '/' '_')
+    - docker build -t $DOCKER_IMAGE_NAME:${TAG} .
+
+push_to_nexus:
+  stage: push
+  only:
+    - /^dev\//
+    - /^uat\//
+    - /^version\//
+  script:
+    - echo "$NEXUS_PASSWORD" | docker login --username "$NEXUS_USERNAME" --password-stdin "$NEXUS_REGISTRY"
+    - TAG=$(echo ${CI_COMMIT_REF_NAME}_${CI_COMMIT_SHORT_SHA} | tr '/' '_')
+    - docker tag $DOCKER_IMAGE_NAME:${TAG} "${NEXUS_REGISTRY}/$DOCKER_IMAGE_NAME:${TAG}"
+    - docker push "${NEXUS_REGISTRY}/$DOCKER_IMAGE_NAME:${TAG}"
+
+deploy_to_nomad_LIVE:
+  stage: deploy
+  image: $NOMAD_DEPLOY_IMAGE
+  only:
+    - /^version\//
+  variables:
+    NOMAD_ADDR: ${NOMAD_ADDR_LIVE}
+    NOMAD_TOKEN: ${NOMAD_TOKEN_LIVE}
+
+  script:
+    - export IMAGE_TAG=$(echo ${CI_COMMIT_REF_NAME}_${CI_COMMIT_SHORT_SHA} | tr '/' '_')
+    - sed 's/"jobName"/"'"$JOB_NAME"'"/g; s/jobName/'"$JOB_NAME"'/g; s/"namespace"/"'"$NOMAD_NAME_SPACE"'"/g; s/"dockerImage"/"'"$DOCKER_IMAGE_NAME"'"/g; s/"latest"/"'"$IMAGE_TAG"'"/g; s/"datacenter-env"/"'"$DATACENTER_LIVE"'"/g; s/"webAdress"/"'"$WEB_ADRESS_LIVE"'"/g; s/"config_dir"/'"$JOB_NAME"'/g; s/environmentCode/live/g; s/serviceName/'"$JOB_NAME"'/g' < project.nomad > job.nomad
+    - cat job.nomad
+    - nomad validate job.nomad
+    - nomad plan job.nomad || if [ $? -eq 255 ]; then exit 255; else echo "success"; fi
+    - nomad run -detach job.nomad
+  when: manual

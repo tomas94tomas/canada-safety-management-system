@@ -1,0 +1,11 @@
+{
+    "compilerOptions": {
+        "baseUrl": "../Downloads/poa-safety-management-system-main",
+        "paths": {
+            "@/*": ["resources/js/*"]
+        }
+    },
+    "exclude": ["node_modules",
+      "public"
+    ]
+}
