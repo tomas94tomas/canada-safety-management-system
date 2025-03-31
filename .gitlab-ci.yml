@@ -1,8 +1,8 @@
 variables:
-  JOB_NAME: 'safety-poa'
+  JOB_NAME: 'safety-canada'
   NOMAD_NAME_SPACE: 'RND-apps'
-  DOCKER_IMAGE_NAME: 'safety-poa'
-  WEB_ADRESS_LIVE: 'safety.fltechnics.com'
+  DOCKER_IMAGE_NAME: 'safety-canada'
+  WEB_ADRESS_LIVE: 'safety-canada.fltechnics.com'
 
 stages:
   - build
